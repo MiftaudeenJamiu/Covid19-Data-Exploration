@@ -1,0 +1,217 @@
+/* COVID-19 Data Exploration Project Utilizing Joins, CTEs, Temp Tables, Window Functions, Aggregate Functions, Views, and 
+Data Type Conversion*/
+
+
+--SHOWING THE DATA WE WILL BE WORKING ON
+SELECT * FROM PortfolioProject..CovidDeaths$
+WHERE continent IS NOT NULL
+ORDER BY location, date
+
+SELECT * FROM PortfolioProject..CovidVaccinations$
+WHERE continent IS NOT NULL
+ORDER BY location, date
+
+--Select data that we are working with
+
+-- For CovidDeath table
+SELECT location, date, total_cases, new_cases, total_deaths, population, '65 and older' AS age_group, aged_65_older As age_value 
+FROM [dbo].[CovidDeaths$] 
+WHERE aged_65_older IS NOT NULL
+UNION ALL
+SELECT location, date, total_cases, new_cases, total_deaths, population, '70 and older' AS age_group, aged_70_older As age_value 
+FROM [dbo].[CovidDeaths$]
+WHERE aged_70_older IS NOT NULL
+ORDER BY 1,2
+
+
+-- For CovidVaccination Table
+SELECT location, date, total_tests, new_tests, total_vaccinations, '65 and older' AS age_group, aged_65_older As age_value 
+FROM [dbo].[CovidVaccinations$]
+WHERE aged_65_older IS NOT NULL
+UNION ALL
+SELECT location, date, total_tests, new_tests, total_vaccinations, '70 and older' AS age_group, aged_70_older As age_value 
+FROM [dbo].[CovidVaccinations$]
+WHERE aged_70_older IS NOT NULL
+ORDER BY 1,2
+
+
+
+--Joining Tables 
+
+--All Data needed Joining
+SELECT a.date, a.location,a.population, a.total_cases, a.total_deaths,
+ b.new_tests,b.total_tests,b.total_vaccinations
+FROM  [dbo].[CovidDeaths$] a
+JOIN [dbo].[CovidVaccinations$] b ON a.date = b.date AND a.location = b.location
+Order By location;
+
+--1. Vaccination rate Per Countries 
+SELECT date, location, population,
+       (SUM(CAST(total_vaccinations AS INT)) / population) * 100 AS vaccination_rate
+FROM (
+    SELECT a.date, a.location, CAST(b.total_vaccinations AS INT) AS total_vaccinations, a.population
+    FROM [dbo].[CovidDeaths$] a
+    JOIN [dbo].[CovidVaccinations$] b ON a.date = b.date AND a.location = b.location
+) sub
+GROUP BY date, location, population;
+
+-- 2. Total Cases vs Total Deaths Per continents
+
+Select continent, date, total_cases,total_deaths, (total_deaths/total_cases)*100 as DeathPercentage
+From [dbo].[CovidDeaths$]
+--Where location like '%asia%'
+where continent is not null 
+order by 1,2
+
+--3. Mortality Rate Analysis per continent 
+SELECT date, continent, 
+       (SUM(CAST(total_deaths AS int)) / population) * 100000 AS death_rate
+FROM [dbo].[CovidDeaths$]
+GROUP BY date, continent, population;
+
+--4. Vaccination Vs Death Rate in selected 10 countries 
+SELECT 
+    a.date, 
+    a.location, 
+    (SUM(CAST(a.total_vaccinations AS int)) / SUM(b.population)) * 100 AS vaccination_rate, 
+    (SUM(CAST(b.total_deaths AS int)) / SUM(b.population)) * 100000 AS death_rate
+FROM [dbo].[CovidVaccinations$] a
+JOIN [dbo].[CovidDeaths$] b 
+    ON a.date = b.date 
+    AND a.location = b.location
+WHERE a.location IN ('United States', 'China', 'France', 'Mexico', 'India', 'United Kingdom', 'Russia', 'Turkey', 'Sweden', 'Canada')
+GROUP BY a.date, a.location, b.population;
+
+-- 5.GLOBAL NUMBERS table
+
+Select SUM(new_cases) as total_cases, SUM(cast(new_deaths as int)) as total_deaths, SUM(cast(new_deaths as int))/SUM(New_Cases)*100 as DeathPercentage
+From [dbo].[CovidDeaths$]
+--Where location like '%states%'
+where continent is not null 
+--Group By date
+order by 1,2
+
+--6.DEMOGRAPHIC ANALYSIS for continent
+
+-- Subquery to handle age group-specific data
+
+WITH AgeGroupData AS (
+    SELECT date, continent, '65 and older' AS age_group, aged_65_older AS age_value 
+    FROM [dbo].[CovidVaccinations$]
+    WHERE aged_65_older IS NOT NULL
+    UNION ALL
+    SELECT date, continent, '70 and older' AS age_group, aged_70_older AS age_value 
+    FROM [dbo].[CovidVaccinations$]
+    WHERE aged_70_older IS NOT NULL
+)
+
+-- Main query combining data from CovidDeaths and CovidVaccinations with age group data
+SELECT 
+    a.date, 
+    a.continent,
+    a.population, 
+    a.total_deaths,
+    b.total_vaccinations,
+    ag.age_group,
+    ag.age_value
+FROM 
+    [dbo].[CovidDeaths$] a
+JOIN 
+    [dbo].[CovidVaccinations$] b ON a.date = b.date AND a.continent = b.continent
+LEFT JOIN 
+    AgeGroupData ag ON a.date = ag.date AND a.location = ag.continent
+ORDER BY 
+    a.continent;
+
+
+
+--7. COUNTRIES WITH HIGHEST INFECTION RATE COMPARED TO POPULATION
+
+Select Top 20 Location, Population, MAX(total_cases) as HighestInfectionCount,  Max((total_cases/population))*100 as PercentPopulationInfected
+From[dbo].[CovidDeaths$]
+--Where location like '%states%'
+Group by Location, Population
+order by PercentPopulationInfected desc
+
+
+
+-- 8. COUNTRIES WITH HIGHEST DEATH COUNT PER POPULATION
+
+Select Top 20Location, MAX(cast(Total_deaths as int)) as TotalDeathCount
+From [dbo].[CovidDeaths$]
+--Where location like '%states%'
+Where continent is not null 
+Group by Location
+order by TotalDeathCount desc
+
+
+
+-- 9. TOP POPULATIONS VS VACCINATIONS 
+-- SHOWS PERCENTAGE OF POPULATION THAT HAS RECEIVED AT LEAST ONE COVID VACCINE
+
+Select  dea.continent, dea.location, dea.date, dea.population, vac.new_vaccinations
+, SUM(CONVERT(int,vac.new_vaccinations)) OVER (Partition by dea.Location Order by dea.location, dea.Date) as RollingPeopleVaccinated
+--, (RollingPeopleVaccinated/population)*100
+From [dbo].[CovidDeaths$] dea
+Join [dbo].[CovidVaccinations$] vac
+	On dea.location = vac.location
+	and dea.date = vac.date
+where dea.continent is not null 
+order by 1,3;
+
+
+
+
+-- USING CTE TO PERFORM CALCULATION ON PARTITION BY IN PREVIOUS QUERY
+
+With PopvsVac (Continent, Location, Date, Population, New_Vaccinations, RollingPeopleVaccinated)
+as
+(
+Select dea.continent, dea.location, dea.date, dea.population, vac.new_vaccinations
+, SUM(CONVERT(int,vac.new_vaccinations)) OVER (Partition by dea.Location Order by dea.location, dea.Date) as RollingPeopleVaccinated
+--, (RollingPeopleVaccinated/population)*100
+From [dbo].[CovidDeaths$] dea
+Join [dbo].[CovidVaccinations$] vac
+	On dea.location = vac.location
+	and dea.date = vac.date
+where dea.continent is not null 
+--order by 2,3
+)
+Select *, (RollingPeopleVaccinated/Population)*100 as rollingpeopleVaccinatedPercentage
+From PopvsVac order by 2,3;
+
+DROP Table if exists #PercentPopulationVaccinated
+CREATE TABLE #PercentPopulationVaccinated (
+    continent NVARCHAR(255),
+    location NVARCHAR(255),
+    date DATE,
+    population INT,
+    new_vaccinations INT,
+    RollingPeopleVaccinated INT
+);
+
+INSERT INTO #PercentPopulationVaccinated
+SELECT 
+    dea.continent, 
+    dea.location, 
+    dea.date, 
+    dea.population, 
+    vac.new_vaccinations,
+    SUM(CONVERT(INT, vac.new_vaccinations)) 
+        OVER (PARTITION BY dea.location ORDER BY dea.date) AS RollingPeopleVaccinated
+FROM  
+    [dbo].[CovidDeaths$] dea
+JOIN 
+    [dbo].[CovidVaccinations$] vac
+    ON dea.location = vac.location
+    AND dea.date = vac.date
+WHERE 
+    dea.continent IS NOT NULL;
+
+	SELECT 
+    *, 
+    (RollingPeopleVaccinated * 1.0 / Population) * 100 AS PercentageVaccinated
+FROM 
+    #PercentPopulationVaccinated;
+
+
