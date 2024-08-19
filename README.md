@@ -54,7 +54,7 @@ Here are some examples of SQL queries that were executed to support our analysis
 
 4. Query for Global Numbers: This query aggregates global statistics, including total deaths, total vaccinations, total population, and total cases, providing a comprehensive overview of the pandemic's impact on a worldwide scale.
 
-Here is the attached file containing all the SQL code that was executed for the analysis [View here]( . This document includes the specific queries used to extract, manipulate, and visualize the data, providing a detailed overview of the steps taken to analyze the dataset.
+Here is the attached file containing all the SQL code that was executed for the analysis [View here](https://github.com/MiftaudeenJamiu/Covid19-Data-Exploration/blob/70aa0706ecdc12eac9ef269ff8e98c763fad86ce/Covid19%20sql%20Analysis.txt). This document includes the specific queries used to extract, manipulate, and visualize the data, providing a detailed overview of the steps taken to analyze the dataset.
 
 ## Results and Findings
 The analysis results are summarized as follows:
