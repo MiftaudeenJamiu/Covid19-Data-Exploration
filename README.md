@@ -1,15 +1,15 @@
 # Covid19-Data- Insights 
 ## Table of Contents
-- Project Overview
-- Data Sources
-- Tools
-- Data Cleaning/Preparation
-- Exploratory Data Analysis
-- Data Analysis
-- Data Visualizations
-- Results and Findings
-- Limitations
-- References
+- [Project Overview](#project-overview)
+- [Data Sources](#data-sources)
+- [Tools](#tools)
+- [Data Cleaning And Preparation](#data-cleaning-and-preparation)
+- [Exploratory Data Analysis](#exploratory-data-analysis)
+- [Data Analysis](#data-analysis)
+- [Data Visualizations](#data-visualizations)
+- [Results and Findings](#results-and-findings)
+- [Limitations](#limitations)
+- [References](#references)
 
 ## Project Overview 
 This project aims to conduct a comprehensive data analysis of COVID-19, focusing on the dynamics of cases, deaths, infections, and vaccination rates across various countries and continents from 2019 to 2021. The study will investigate how these key metrics evolved, exploring regional and global trends to discern patterns and insights that can inform public health strategies and policies.
@@ -22,7 +22,7 @@ The data for this analysis was sourced from https://ourworldindata.org and is co
 - MySql Server - Data analysis.
 - Tableau - Creating Reports and Visualizations.
 
-## Data Cleaning/Preparation
+## Data Cleaning And Preparation
 In the initial data preparation phase, we undertook several key tasks to ensure the dataset was ready for analysis:
 1. Data Loading and Inspection: We began by importing the dataset from the covid_19.csv file and performing an initial review to understand its structure and contents. To facilitate a more detailed examination, the file was divided into two separate files: covid_vaccination and covid_death. This separation allowed us to focus individually on vaccination and death case data.
 
@@ -60,7 +60,9 @@ Here is the attached file containing all the SQL code that was executed for the 
 The analysis results are summarized as follows:
 - 
 
-## Data Visualization
+## Data Visualizations
 
-## Limitation
+## Limitations
 The dataset contains a significant number of null values and missing data, which poses a challenge to the accuracy and reliability of the analysis. These gaps can lead to incomplete or skewed insights, as crucial information regarding cases, deaths, and vaccinations may be absent or underrepresented. Consequently, any conclusions drawn may not fully reflect the true scope of the pandemic or its impact. The presence of missing data also complicates efforts to perform precise statistical analyses and could affect the robustness of trend evaluations and comparisons across different regions.
+
+## References
